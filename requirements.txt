@@ -1,0 +1,3 @@
+# Dependências diretas da aplicação.
+pygame>=2.5,<3
+moviepy==1.0.3

@@ -1,0 +1,26 @@
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Bytecode e caches do Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDEs e sistema operacional
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Arquivos temporários e dados gerados pela aplicação
+*.tmp
+*.log
+save.dat
+save.dir
+save.bak
+pontuação.txt

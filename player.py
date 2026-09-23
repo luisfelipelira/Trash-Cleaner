@@ -1,13 +1,7 @@
 import pygame
-from time import sleep
 
 WIDTH = 980
 HEIGHT = 720
-
-clock = pygame.time.Clock()
-pygame.mixer.init()
-andar = pygame.mixer.Sound('Sons/passos.wav')
-
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, *groups):

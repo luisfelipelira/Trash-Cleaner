@@ -1,8 +1,12 @@
-import pygame
-from tkinter import *
+import os
+from pathlib import Path
 from tkinter import messagebox
 
-from moviepy.editor import *
+PROJECT_DIR = Path(__file__).resolve().parent
+os.chdir(PROJECT_DIR)
+
+import pygame
+from moviepy.editor import VideoFileClip
 
 from catador import Carro
 from player import Player
@@ -11,13 +15,11 @@ from lixos import LixoL
 from lixos import LixoR
 from lixos import tiro
 from buraco import buracos
-from time import sleep
 import lixos
 import buraco
 
 import math
 from random import randint
-import os
 
 os.environ['SDL_VIDEO_CENTERED'] = '1'
 
@@ -53,28 +55,28 @@ cor = (0, 255, 0, 255)
 
 LIXOVELOCIDADE = 100
 
-titulo = pygame.image.load('imagens/menu/titulo.png')
+titulo = pygame.image.load('Imagens/menu/titulo.png')
 titulo = pygame.transform.scale(titulo, [410, 180])
-fundo = pygame.image.load('imagens/menu/fundo.png')
+fundo = pygame.image.load('Imagens/menu/fundo.png')
 
-jogar = pygame.image.load('imagens/menu/play.png')
-jogar_alt = pygame.image.load('imagens/menu/playalt.png')
+jogar = pygame.image.load('Imagens/menu/play.png')
+jogar_alt = pygame.image.load('Imagens/menu/playalt.png')
 
-sair = pygame.image.load('imagens/menu/sair.png')
-sair_alt = pygame.image.load('imagens/menu/sairalt.png')
+sair = pygame.image.load('Imagens/menu/sair.png')
+sair_alt = pygame.image.load('Imagens/menu/sairalt.png')
 
-config = pygame.image.load('imagens/menu/config.png')
-config_alt = pygame.image.load('imagens/menu/configalt.png')
+config = pygame.image.load('Imagens/menu/config.png')
+config_alt = pygame.image.load('Imagens/menu/configalt.png')
 
-guide = pygame.image.load('imagens/menu/guide.png')
-guide_alt = pygame.image.load('imagens/menu/guidealt.png')
+guide = pygame.image.load('Imagens/menu/guide.png')
+guide_alt = pygame.image.load('Imagens/menu/guidealt.png')
 
-cred = instruc = pygame.image.load('imagens/menu/cred.png')
-cred_alt = pygame.image.load('imagens/menu/credalt.png')
+cred = instruc = pygame.image.load('Imagens/menu/cred.png')
+cred_alt = pygame.image.load('Imagens/menu/credalt.png')
 
-pts = pygame.image.load('imagens/hud/pts2.png')
-mochila = pygame.image.load('imagens/hud/mochila2.png')
-time = pygame.image.load('imagens/hud/timer2.png')
+pts = pygame.image.load('Imagens/hud/pts2.png')
+mochila = pygame.image.load('Imagens/hud/mochila2.png')
+time = pygame.image.load('Imagens/hud/timer2.png')
 
 botao = [jogar, jogar_alt, sair, sair_alt]
 
@@ -94,80 +96,80 @@ click_music.set_volume(0.5)
 
 #CONFIGURAÇOES
 
-seleçao = pygame.image.load('imagens/opçoes/dificuldade/seleçao.png')
+seleçao = pygame.image.load('Imagens/opçoes/dificuldade/seleçao.png')
 
-fundo_conf = pygame.image.load('imagens/opçoes/ret5.png')
+fundo_conf = pygame.image.load('Imagens/opçoes/ret5.png')
 fundo_conf = pygame.transform.scale(fundo_conf, (width, height))
 
-sfx_titulo = pygame.image.load('imagens/opçoes/sfx/titulosfx.png')
-sfx_musica = pygame.image.load('imagens/opçoes/sfx/musica.png')
-sfx_ef = pygame.image.load('imagens/opçoes/sfx/efsonoros.png')
-sfx_mais = pygame.image.load('imagens/opçoes/sfx/+.png')
-sfx_menos = pygame.image.load('imagens/opçoes/sfx/-.png')
+sfx_titulo = pygame.image.load('Imagens/opçoes/sfx/titulosfx.png')
+sfx_musica = pygame.image.load('Imagens/opçoes/sfx/musica.png')
+sfx_ef = pygame.image.load('Imagens/opçoes/sfx/efsonoros.png')
+sfx_mais = pygame.image.load('Imagens/opçoes/sfx/+.png')
+sfx_menos = pygame.image.load('Imagens/opçoes/sfx/-.png')
 
-sfx_click = pygame.image.load('imagens/opçoes/sfx/clique.png')
-sfx_barra = pygame.image.load('imagens/opçoes/sfx/separaçao.png')
+sfx_click = pygame.image.load('Imagens/opçoes/sfx/clique.png')
+sfx_barra = pygame.image.load('Imagens/opçoes/sfx/separaçao.png')
 
 sfx_botao = [sfx_menos, sfx_mais]
 
-dificuldade_titulo = pygame.image.load('imagens/opçoes/dificuldade/titulo.png')
-facil = pygame.image.load('imagens/opçoes/dificuldade/facil.png')
-medio = pygame.image.load('imagens/opçoes/dificuldade/medio.png')
-dificil = pygame.image.load('imagens/opçoes/dificuldade/dificil.png')
+dificuldade_titulo = pygame.image.load('Imagens/opçoes/dificuldade/titulo.png')
+facil = pygame.image.load('Imagens/opçoes/dificuldade/facil.png')
+medio = pygame.image.load('Imagens/opçoes/dificuldade/medio.png')
+dificil = pygame.image.load('Imagens/opçoes/dificuldade/dificil.png')
 
-video_titulo = pygame.image.load('imagens/opçoes/video/video.png')
-full = pygame.image.load('imagens/opçoes/video/fullscreen.png')
-janela = pygame.image.load('imagens/opçoes/video/janela.png')
+video_titulo = pygame.image.load('Imagens/opçoes/video/video.png')
+full = pygame.image.load('Imagens/opçoes/video/fullscreen.png')
+janela = pygame.image.load('Imagens/opçoes/video/janela.png')
 
-aplicar = pygame.image.load('imagens/opçoes/botao/aplicar.png')
-aplicar_alt = pygame.image.load('imagens/opçoes/botao/aplicaralt.png')
-fechar = pygame.image.load('imagens/opçoes/botao/fechar.png')
-fechar_alt = pygame.image.load('imagens/opçoes/botao/fecharalt.png')
+aplicar = pygame.image.load('Imagens/opçoes/botao/aplicar.png')
+aplicar_alt = pygame.image.load('Imagens/opçoes/botao/aplicaralt.png')
+fechar = pygame.image.load('Imagens/opçoes/botao/fechar.png')
+fechar_alt = pygame.image.load('Imagens/opçoes/botao/fecharalt.png')
 
 #INSTRUÇÕES
-pag1 = pygame.image.load('imagens/instruçoes/pág1.png')
+pag1 = pygame.image.load('Imagens/instruçoes/pág1.png')
 pag1 = pygame.transform.scale(pag1, [width, height])
 
-pag2 = pygame.image.load('imagens/instruçoes/pág2.png')
+pag2 = pygame.image.load('Imagens/instruçoes/pág2.png')
 pag2 = pygame.transform.scale(pag2, [width, height])
 
-pag3 = pygame.image.load('imagens/instruçoes/pág3.png')
+pag3 = pygame.image.load('Imagens/instruçoes/pág3.png')
 pag3 = pygame.transform.scale(pag3, [width, height])
 
-pag4 = pygame.image.load('imagens/instruçoes/pág4.png')
+pag4 = pygame.image.load('Imagens/instruçoes/pág4.png')
 pag4 = pygame.transform.scale(pag4, [width, height])
 
-pag5 = pygame.image.load('imagens/instruçoes/pág5.png')
+pag5 = pygame.image.load('Imagens/instruçoes/pág5.png')
 pag5 = pygame.transform.scale(pag5, [width, height])
 
-proximo = pygame.image.load('imagens/instruçoes/go.png')
+proximo = pygame.image.load('Imagens/instruçoes/go.png')
 proximo = pygame.transform.scale(proximo, (20, 24))
 
-proximo_alt = pygame.image.load('imagens/instruçoes/go_alt.png')
+proximo_alt = pygame.image.load('Imagens/instruçoes/go_alt.png')
 proximo_alt = pygame.transform.scale(proximo_alt, (20, 24))
 
-anterior = pygame.image.load('imagens/instruçoes/back.png')
+anterior = pygame.image.load('Imagens/instruçoes/back.png')
 anterior = pygame.transform.scale(anterior, (20, 24))
 
-anterior_alt = pygame.image.load('imagens/instruçoes/back_alt.png')
+anterior_alt = pygame.image.load('Imagens/instruçoes/back_alt.png')
 anterior_alt = pygame.transform.scale(anterior_alt, (20, 24))
 
 #GAMEOVER
-gameover = pygame.image.load('imagens/game over/gameover.png')
+gameover = pygame.image.load('Imagens/game over/gameover.png')
 
-gameover_novamente = pygame.image.load('imagens/game over/jogar.png')
-gameover_novamente_alt = pygame.image.load('imagens/game over/jogaralt.png')
+gameover_novamente = pygame.image.load('Imagens/game over/jogar.png')
+gameover_novamente_alt = pygame.image.load('Imagens/game over/jogaralt.png')
 
-gameover_sair = pygame.image.load('imagens/game over/sair.png')
-gameover_sair_alt = pygame.image.load('imagens/game over/sairalt.png')
+gameover_sair = pygame.image.load('Imagens/game over/sair.png')
+gameover_sair_alt = pygame.image.load('Imagens/game over/sairalt.png')
 
 
 #passos = pygame.mixer.Sound('Sons/passos.wav')
 
-clip = VideoFileClip('imagens/intro.mp4')
+clip = VideoFileClip('Imagens/intro.mp4')
 clip.preview()
 
-creditos = VideoFileClip('imagens/creditos.mp4')
+creditos = VideoFileClip('Imagens/creditos.mp4')
 
 n = 10
 b = 0
