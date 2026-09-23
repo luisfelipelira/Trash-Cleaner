@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from tkinter import messagebox
 
 PROJECT_DIR = Path(__file__).resolve().parent
 os.chdir(PROJECT_DIR)
@@ -29,24 +28,57 @@ HEIGHT = 720
 pygame.init()
 pygame.display.set_caption("Trash Cleaner")
 tela = pygame.display.Info()
-width = tela.current_w - 386
-height = tela.current_h -48
-print(width, height)
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-surface = pygame.Surface((width,height), pygame.SRCALPHA)
+desktop_size = (tela.current_w, tela.current_h)
+resolution_options = [
+    size for size in [(800, 600), (980, 720), (1280, 720), (1366, 768),
+                      (1600, 900), (1920, 1080)]
+    if size[0] <= desktop_size[0] and size[1] <= desktop_size[1]
+]
+if (980, 720) not in resolution_options:
+    resolution_options.append((980, 720))
+resolution_options.sort(key=lambda size: size[0] * size[1])
+display_size = (980, 720)
+window = pygame.display.set_mode(display_size)
+# Toda a interface e o jogo usam esta superficie logica. Somente a apresentacao
+# final e escalada, preservando coordenadas, proporcao e colisoes.
+screen = pygame.Surface((WIDTH, HEIGHT)).convert()
 
 screenfull = 1
 
-def fullscreen_off(screen):
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    global screenfull
-    screenfull = 1
+def present():
+    window_width, window_height = window.get_size()
+    scale = min(window_width / WIDTH, window_height / HEIGHT)
+    draw_size = (max(1, round(WIDTH * scale)), max(1, round(HEIGHT * scale)))
+    offset = ((window_width - draw_size[0]) // 2, (window_height - draw_size[1]) // 2)
+    window.fill((5, 10, 12))
+    window.blit(pygame.transform.smoothscale(screen, draw_size), offset)
+    pygame.display.flip()
+
+
+def logical_mouse(position=None):
+    mouse_x, mouse_y = position if position is not None else pygame.mouse.get_pos()
+    window_width, window_height = window.get_size()
+    scale = min(window_width / WIDTH, window_height / HEIGHT)
+    draw_width, draw_height = WIDTH * scale, HEIGHT * scale
+    offset_x = (window_width - draw_width) / 2
+    offset_y = (window_height - draw_height) / 2
+    return (int((mouse_x - offset_x) / scale), int((mouse_y - offset_y) / scale))
+
+
+def set_display_mode(fullscreen, resolution):
+    global window, screenfull, display_size
+    display_size = resolution
+    flags = pygame.FULLSCREEN if fullscreen else 0
+    window = pygame.display.set_mode(display_size, flags)
+    screenfull = 2 if fullscreen else 1
+
+
+def fullscreen_off():
+    set_display_mode(False, display_size)
     return screen
 
-def fullscreen_on(screen):
-    screen = pygame.display.set_mode((WIDTH, HEIGHT),pygame.FULLSCREEN)
-    global screenfull
-    screenfull = 2
+def fullscreen_on():
+    set_display_mode(True, display_size)
     return screen
 
 # Iniciando imagens, sons e fontes e arquivos
@@ -94,53 +126,27 @@ hard_music.set_volume(0.5)
 jogar_saco.set_volume(0.5)
 click_music.set_volume(0.5)
 
-#CONFIGURAÇOES
-
-seleçao = pygame.image.load('Imagens/opçoes/dificuldade/seleçao.png')
-
-fundo_conf = pygame.image.load('Imagens/opçoes/ret5.png')
-fundo_conf = pygame.transform.scale(fundo_conf, (width, height))
-
-sfx_titulo = pygame.image.load('Imagens/opçoes/sfx/titulosfx.png')
-sfx_musica = pygame.image.load('Imagens/opçoes/sfx/musica.png')
-sfx_ef = pygame.image.load('Imagens/opçoes/sfx/efsonoros.png')
-sfx_mais = pygame.image.load('Imagens/opçoes/sfx/+.png')
-sfx_menos = pygame.image.load('Imagens/opçoes/sfx/-.png')
-
-sfx_click = pygame.image.load('Imagens/opçoes/sfx/clique.png')
-sfx_barra = pygame.image.load('Imagens/opçoes/sfx/separaçao.png')
-
-sfx_botao = [sfx_menos, sfx_mais]
-
-dificuldade_titulo = pygame.image.load('Imagens/opçoes/dificuldade/titulo.png')
-facil = pygame.image.load('Imagens/opçoes/dificuldade/facil.png')
-medio = pygame.image.load('Imagens/opçoes/dificuldade/medio.png')
-dificil = pygame.image.load('Imagens/opçoes/dificuldade/dificil.png')
-
-video_titulo = pygame.image.load('Imagens/opçoes/video/video.png')
-full = pygame.image.load('Imagens/opçoes/video/fullscreen.png')
-janela = pygame.image.load('Imagens/opçoes/video/janela.png')
-
-aplicar = pygame.image.load('Imagens/opçoes/botao/aplicar.png')
-aplicar_alt = pygame.image.load('Imagens/opçoes/botao/aplicaralt.png')
-fechar = pygame.image.load('Imagens/opçoes/botao/fechar.png')
-fechar_alt = pygame.image.load('Imagens/opçoes/botao/fecharalt.png')
+# Configuracoes persistentes da sessao. Os valores antigos eram recriados toda
+# vez que a tela era aberta, fazendo os controles parecerem inoperantes.
+music_volume = 0.5
+sfx_volume = 0.5
+difficulty = "medio"
 
 #INSTRUÇÕES
 pag1 = pygame.image.load('Imagens/instruçoes/pág1.png')
-pag1 = pygame.transform.scale(pag1, [width, height])
+pag1 = pygame.transform.scale(pag1, [WIDTH, HEIGHT])
 
 pag2 = pygame.image.load('Imagens/instruçoes/pág2.png')
-pag2 = pygame.transform.scale(pag2, [width, height])
+pag2 = pygame.transform.scale(pag2, [WIDTH, HEIGHT])
 
 pag3 = pygame.image.load('Imagens/instruçoes/pág3.png')
-pag3 = pygame.transform.scale(pag3, [width, height])
+pag3 = pygame.transform.scale(pag3, [WIDTH, HEIGHT])
 
 pag4 = pygame.image.load('Imagens/instruçoes/pág4.png')
-pag4 = pygame.transform.scale(pag4, [width, height])
+pag4 = pygame.transform.scale(pag4, [WIDTH, HEIGHT])
 
 pag5 = pygame.image.load('Imagens/instruçoes/pág5.png')
-pag5 = pygame.transform.scale(pag5, [width, height])
+pag5 = pygame.transform.scale(pag5, [WIDTH, HEIGHT])
 
 proximo = pygame.image.load('Imagens/instruçoes/go.png')
 proximo = pygame.transform.scale(proximo, (20, 24))
@@ -190,16 +196,19 @@ def menu():
     screen.blit(fundo, (0, 0))
     screen.blit(titulo, (290, 0))
 
-    pygame.display.flip()
+    present()
 
     menu_music.stop()
     jogo_music.stop()
     hard_music.stop()
-    menu_music.play()
+    menu_music.play(-1)
 
     while pygame.event.wait() or pygame.event.get():
 
-        mouse = pygame.mouse.get_pos()
+        # Reconstroi o menu a cada quadro; telas modais nao deixam residuos.
+        screen.blit(fundo, (0, 0))
+        screen.blit(titulo, (290, 0))
+        mouse = logical_mouse()
         press = pygame.mouse.get_pressed()[0]
 
         #JOGAR
@@ -225,6 +234,10 @@ def menu():
             if press:
                 click_music.play()
                 conf()
+                # O loop espera o proximo evento; restaure o menu imediatamente.
+                screen.blit(fundo, (0, 0))
+                screen.blit(titulo, (290, 0))
+                present()
         else:
             screen.blit(config, (150, 370))
             
@@ -256,200 +269,8 @@ def menu():
             if event.type == pygame.QUIT:
                 pygame.quit()
             
-        pygame.display.flip()
+        present()
 
-def conf():
-    
-    ef_txt = 5
-    music_txt = 5
-    vol_ef = 0.5
-    vol_music = 0.5
-
-    #colocando na tela
-    screen.blit(fundo_conf, (0, 0))
-    pygame.draw.circle(surface, (0, 0, 0, 10), [100, 100], 7)
-
-    #audio
-    screen.blit(sfx_titulo, (200, 70))
-    screen.blit(sfx_ef, (100, 154))
-    screen.blit(sfx_musica, (205, 203))
-
-    screen.blit(sfx_botao[0], (300, 150))
-    screen.blit(sfx_botao[1], (382, 150))
-    screen.blit(sfx_barra, (370, 145))
-
-    screen.blit(sfx_botao[0], (300, 200))
-    screen.blit(sfx_botao[1], (382, 200))
-    screen.blit(sfx_barra, (370, 195))
-
-    #video
-    screen.blit(video_titulo, (670, 250))
-    screen.blit(janela, (600, 355))
-    screen.blit(full, (601, 390))
-
-    #dificuldade
-    screen.blit(dificuldade_titulo, (100, 350))
-    screen.blit(facil, (100, 450))
-    screen.blit(medio, (100, 485))
-    screen.blit(dificil, (100, 520))
-
-    screen.blit(aplicar, (width -320, height -90))
-    screen.blit(fechar, (width -140, height -90))
-
-    while pygame.event.wait() or pygame.event.get():
-        
-        mouse = pygame.mouse.get_pos()
-        press = pygame.mouse.get_pressed()
-
-        #CONTROLE DE VOLUME
-        if 300 + 62 > mouse[0] > 300 and 150 + 35 > mouse[1] > 150:
-            if press[0]:
-                screen.blit(sfx_click, (300, 150))
-                vol_ef -= 0.1
-                ef_txt -= 1               
-                print (vol_ef)
-            else:
-                screen.blit(sfx_botao[0], (300, 150))
-
-        if 382 + 62 > mouse[0] > 382 and 150 + 35 > mouse[1] > 150:
-            if press[0]:
-                screen.blit(sfx_click, (382, 150))
-                vol_ef += 0.1
-                ef_txt += 1
-
-                print (vol_ef)
-            else:
-                screen.blit(sfx_botao[1], (382, 150))
-        
-        if 300 + 62 > mouse[0] > 300 and 200 + 35 > mouse[1] > 200:
-            if press[0]:
-                screen.blit(sfx_click, (300, 200))
-                vol_music -= 0.1
-                music_txt -= 1
-                print (vol_music)
-            else:
-                screen.blit(sfx_botao[0], (300, 200))
-
-        if 382 + 62 > mouse[0] > 382 and 200 + 35 > mouse[1] > 200:
-            if press[0]:
-                screen.blit(sfx_click, (382, 200))
-                vol_music += 0.1
-                music_txt += 1
-                print (vol_music)
-            else:
-                screen.blit(sfx_botao[1], (382, 200))
-
-        #DISPLAY
-        #JANELA
-        if 600 + 182 > mouse[0] > 600 and 355 + 25 > mouse[1] > 355:
-            screen.blit(seleçao, (603, 358))
-            if press[0]:
-                fullscreen_off(screen)
-                conf()
-                for u in range(0, 10):
-                    screen.blit(janela, (600, 355))
-        else:
-            screen.blit(surface, (603-91, 357-90))
-
-        #FULLSCREEN
-        if 601 + 164 > mouse[0] > 601 and 390 + 23 > mouse[1] > 390:
-            screen.blit(seleçao, (603, 392))
-            if press[0]:
-                fullscreen_on(screen)
-                conf()
-                for u in range(0, 10):
-                    screen.blit(full, (601, 390))
-        else:
-            screen.blit(surface, (603-91, 392-90))
-        #DIFICULDADE
-        #FACIL
-        if 100 + 90 > mouse[0] > 100 and 450 + 25 > mouse[1] > 450:
-            screen.blit(seleçao, (100, 454))
-            if press[0]:
-                faci()
-                for u in range(0, 10):
-                    screen.blit(facil, (100, 450))
-        else:
-            screen.blit(surface, (100-91, 454-90))
-        
-        #MEDIO
-        if 100 + 100 > mouse[0] > 100 and 485 + 23 > mouse[1] > 485:
-            screen.blit(seleçao, (100, 489))
-            if press[0]:
-                medi()
-                for u in range(0, 10):
-                    screen.blit(medio, (100, 485))
-        else:
-            screen.blit(surface, (100-91, 489-90))
-            
-
-        #DIFICIL
-        if 100 + 100 > mouse[0] > 100 and 520 + 24 > mouse[1] > 520:
-            screen.blit(seleçao, (100, 524))
-            if press[0]:
-                difi()
-                for u in range(0, 10):
-                    screen.blit(dificil, (100, 520))
-        else:
-            screen.blit(surface, (100-91, 524-90))
-            
-
-        #APLICAR E SAIR
-        if (width-320) + 169 > mouse[0] > (width-320) and (height-90) + 58 > mouse[1] > (height-90):
-            screen.blit(aplicar_alt, (width -318, height -87))
-            if press[0]:
-                vol()
-                pygame.display.update()
-        else:
-            screen.blit(aplicar, (width -320, height -90))
-
-        if (width-140) + 105 > mouse[0] > (width-140) and (height-90) + 55 > mouse[1] > (height-90):
-            screen.blit(fechar_alt, (width -139, height -88))
-            if press[0]:
-                menu() 
-
-        else:
-            screen.blit(fechar, (width -140, height -90))
-    
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    menu()
-
-        def vol_min():
-            Tk().wm_withdraw()
-            messagebox.showwarning('ATENÇÃO', 'Volume Mínimo Alcançado')
-        def vol_max():
-            Tk().wm_withdraw()
-            messagebox.showwarning('ATENÇÃO', 'Volume Máximo Alcançado')
-
-        if vol_ef < 0:
-            vol_ef = 0
-            vol_min()
-
-        if vol_music < 0:
-            vol_music = 0
-            vol_min()
-
-        if vol_ef > 1:
-            vol_ef = 1
-            vol_max()
-
-        if vol_music > 1:
-            vol_music = 1
-            vol_max()
-        
-        pygame.display.flip()
-
-        def vol():
-            menu_music.set_volume(vol_music)
-            jogo_music.set_volume(vol_music)
-            hard_music.set_volume(vol_music)
-            jogar_saco.set_volume(vol_ef)
-            click_music.set_volume(vol_ef)
-    
 def instruçoes():
     pags = 1
     screen.blit(pag1, (0, 0))
@@ -468,7 +289,7 @@ def instruçoes():
             screen.blit(pag5, (0, 0))
         
 
-        mouse = pygame.mouse.get_pos()
+        mouse = logical_mouse()
         press = pygame.mouse.get_pressed()[0]
         comandos = pygame.key.get_pressed()
 
@@ -478,13 +299,13 @@ def instruçoes():
             screen.blit(proximo, (530, 672))
             if press:
                 pags +=1
-                pygame.display.flip()
+                present()
 
         if 435 + 20 > mouse[0] > 435 and 672 + 24 > mouse[1] > 672:
             screen.blit(anterior, (435, 672))
             if pygame.mouse.get_pressed()[0]:
                 pags -=1
-                pygame.display.flip()
+                present()
 
         
 
@@ -500,18 +321,220 @@ def instruçoes():
         elif pags >= 6:
             pags = 1
             
-        pygame.display.flip()
+        present()
+
+def conf():
+    """Painel de configuracoes com layout fixo, estado persistente e sliders."""
+    global music_volume, sfx_volume, difficulty, n, b
+
+    draft_music = music_volume
+    draft_sfx = sfx_volume
+    draft_difficulty = difficulty
+    draft_fullscreen = screenfull == 2
+    draft_resolution = display_size
+    dragging = None
+    notice_until = 0
+    clock = pygame.time.Clock()
+    settings_background = pygame.transform.scale(fundo, (WIDTH, HEIGHT))
+
+    colors = {
+        "overlay": (8, 18, 22, 218), "panel": (20, 42, 46),
+        "card": (25, 51, 55), "border": (56, 91, 91),
+        "text": (242, 246, 238), "muted": (164, 183, 177),
+        "accent": (238, 175, 81), "accent_dark": (126, 83, 34),
+        "success": (102, 198, 142),
+    }
+    title_font = pygame.font.Font(font_name, 38)
+    section_font = pygame.font.Font(font_name, 23)
+    body_font = pygame.font.Font(font_name, 18)
+    small_font = pygame.font.Font(font_name, 15)
+
+    music_track = pygame.Rect(94, 244, 300, 10)
+    sfx_track = pygame.Rect(94, 344, 300, 10)
+    difficulty_buttons = {
+        "facil": pygame.Rect(535, 205, 105, 46),
+        "medio": pygame.Rect(650, 205, 105, 46),
+        "dificil": pygame.Rect(765, 205, 105, 46),
+    }
+    window_button = pygame.Rect(535, 365, 160, 52)
+    fullscreen_button = pygame.Rect(710, 365, 160, 52)
+    resolution_down = pygame.Rect(535, 465, 46, 42)
+    resolution_up = pygame.Rect(824, 465, 46, 42)
+    apply_button = pygame.Rect(620, 605, 205, 54)
+    close_button = pygame.Rect(837, 605, 80, 54)
+
+    def label(value, font, color, position, centered=False):
+        image = font.render(value, True, color)
+        rect = image.get_rect(center=position) if centered else image.get_rect(topleft=position)
+        screen.blit(image, rect)
+
+    def button(rect, value, selected=False, primary=False):
+        hovered = rect.collidepoint(logical_mouse())
+        if primary:
+            fill = (250, 193, 103) if hovered else colors["accent"]
+            text_color = (35, 29, 21)
+        elif selected:
+            fill = (150, 99, 40) if hovered else colors["accent_dark"]
+            text_color = colors["text"]
+        else:
+            fill = (49, 82, 82) if hovered else (38, 67, 69)
+            text_color = colors["text"]
+        pygame.draw.rect(screen, fill, rect, border_radius=10)
+        border = colors["accent"] if selected else colors["border"]
+        pygame.draw.rect(screen, border, rect, 2, border_radius=10)
+        label(value, body_font, text_color, rect.center, True)
+
+    def slider(track, value):
+        pygame.draw.rect(screen, (47, 69, 69), track, border_radius=5)
+        fill = track.copy()
+        fill.width = round(track.width * value)
+        if fill.width:
+            pygame.draw.rect(screen, colors["accent"], fill, border_radius=5)
+        knob_x = track.left + round(track.width * value)
+        pygame.draw.circle(screen, colors["text"], (knob_x, track.centery), 12)
+        pygame.draw.circle(screen, colors["accent"], (knob_x, track.centery), 12, 3)
+        label(f"{round(value * 100)}%", body_font, colors["text"],
+              (track.right + 34, track.centery), True)
+
+    def value_from_mouse(track, mouse_x):
+        return max(0.0, min(1.0, (mouse_x - track.left) / track.width))
+
+    def set_preview_volumes():
+        menu_music.set_volume(draft_music)
+        jogo_music.set_volume(draft_music)
+        hard_music.set_volume(draft_music)
+        jogar_saco.set_volume(draft_sfx)
+        click_music.set_volume(draft_sfx)
+
+    running = True
+    while running:
+        clock.tick(60)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                raise SystemExit
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                draft_music, draft_sfx = music_volume, sfx_volume
+                set_preview_volumes()
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                event_pos = logical_mouse(event.pos)
+                if music_track.inflate(24, 34).collidepoint(event_pos):
+                    dragging = "music"
+                    draft_music = value_from_mouse(music_track, event_pos[0])
+                    set_preview_volumes()
+                elif sfx_track.inflate(24, 34).collidepoint(event_pos):
+                    dragging = "sfx"
+                    draft_sfx = value_from_mouse(sfx_track, event_pos[0])
+                    set_preview_volumes()
+                elif window_button.collidepoint(event_pos):
+                    draft_fullscreen = False
+                elif fullscreen_button.collidepoint(event_pos):
+                    draft_fullscreen = True
+                elif resolution_down.collidepoint(event_pos):
+                    index = resolution_options.index(draft_resolution)
+                    draft_resolution = resolution_options[(index - 1) % len(resolution_options)]
+                    click_music.play()
+                elif resolution_up.collidepoint(event_pos):
+                    index = resolution_options.index(draft_resolution)
+                    draft_resolution = resolution_options[(index + 1) % len(resolution_options)]
+                    click_music.play()
+                elif close_button.collidepoint(event_pos):
+                    draft_music, draft_sfx = music_volume, sfx_volume
+                    set_preview_volumes()
+                    running = False
+                elif apply_button.collidepoint(event_pos):
+                    music_volume, sfx_volume = draft_music, draft_sfx
+                    difficulty = draft_difficulty
+                    speed, level = {
+                        "facil": (10, 0), "medio": (16, 1), "dificil": (22, 2)
+                    }[difficulty]
+                    lixos.LIXOVELOCIDADE = buraco.LIXOVELOCIDADE = n = speed
+                    b = level
+                    set_preview_volumes()
+                    if (draft_fullscreen != (screenfull == 2)
+                            or draft_resolution != display_size):
+                        set_display_mode(draft_fullscreen, draft_resolution)
+                    click_music.play()
+                    notice_until = pygame.time.get_ticks() + 1800
+                else:
+                    for option, rect in difficulty_buttons.items():
+                        if rect.collidepoint(event_pos):
+                            draft_difficulty = option
+                            click_music.play()
+                            break
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                dragging = None
+            elif event.type == pygame.MOUSEMOTION and dragging:
+                event_pos = logical_mouse(event.pos)
+                if dragging == "music":
+                    draft_music = value_from_mouse(music_track, event_pos[0])
+                else:
+                    draft_sfx = value_from_mouse(sfx_track, event_pos[0])
+                set_preview_volumes()
+
+        screen.blit(settings_background, (0, 0))
+        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        overlay.fill(colors["overlay"])
+        screen.blit(overlay, (0, 0))
+        panel = pygame.Rect(48, 38, WIDTH - 96, HEIGHT - 76)
+        pygame.draw.rect(screen, colors["panel"], panel, border_radius=20)
+        pygame.draw.rect(screen, colors["border"], panel, 2, border_radius=20)
+
+        label("CONFIGURACOES", title_font, colors["text"], (82, 66))
+        label("Ajuste sua experiencia de jogo", small_font, colors["muted"], (84, 111))
+        pygame.draw.line(screen, colors["border"], (84, 143), (896, 143), 1)
+
+        pygame.draw.rect(screen, colors["card"], (75, 166, 385, 365), border_radius=14)
+        label("AUDIO", section_font, colors["accent"], (94, 183))
+        label("Musica", body_font, colors["text"], (94, 211))
+        slider(music_track, draft_music)
+        label("Efeitos sonoros", body_font, colors["text"], (94, 311))
+        slider(sfx_track, draft_sfx)
+        label("Clique ou arraste para ajustar", small_font, colors["muted"], (94, 385))
+
+        pygame.draw.rect(screen, colors["card"], (495, 166, 400, 365), border_radius=14)
+        label("DIFICULDADE", section_font, colors["accent"], (520, 183))
+        for option, rect in difficulty_buttons.items():
+            button(rect, option.capitalize(), option == draft_difficulty)
+        descriptions = {
+            "facil": "Ritmo tranquilo, sem buracos.",
+            "medio": "Ritmo equilibrado e obstaculos.",
+            "dificil": "Mais velocidade e obstaculos.",
+        }
+        label(descriptions[draft_difficulty], small_font, colors["muted"], (535, 269))
+        pygame.draw.line(screen, colors["border"], (520, 318), (870, 318), 1)
+        label("MODO DE EXIBICAO", section_font, colors["accent"], (520, 336))
+        button(window_button, "Janela", not draft_fullscreen)
+        button(fullscreen_button, "Tela cheia", draft_fullscreen)
+        label("RESOLUCAO", small_font, colors["muted"], (535, 442))
+        button(resolution_down, "<")
+        button(resolution_up, ">")
+        resolution_text = f"{draft_resolution[0]} x {draft_resolution[1]}"
+        label(resolution_text, body_font, colors["text"], (702, 486), True)
+        label("Exibicao e resolucao mudam ao aplicar.", small_font,
+              colors["muted"], (535, 512))
+
+        if pygame.time.get_ticks() < notice_until:
+            label("Configuracoes aplicadas", small_font, colors["success"], (84, 623))
+        button(apply_button, "Aplicar alteracoes", primary=True)
+        button(close_button, "Voltar")
+        label("ESC para voltar", small_font, colors["muted"], (84, 652))
+        present()
+
+    pygame.event.clear([pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP])
+
 
 def game_over():
     screen.blit(gameover,(WIDTH/4.5, 200))
     screen.blit(gameover_novamente, (150,580))
     screen.blit(gameover_sair, (550,580))
 
-    pygame.display.flip()
+    present()
 
     while pygame.event.wait() or pygame.event.get():
 
-        mouse = pygame.mouse.get_pos()
+        mouse = logical_mouse()
         press = pygame.mouse.get_pressed()[0]
 
         #JOGAR
@@ -535,51 +558,52 @@ def game_over():
             if event.type == pygame.QUIT:
                 pygame.quit()
             
-        pygame.display.flip()
+        present()
 
 def faci():
+    global b, n, difficulty
     lixos.LIXOVELOCIDADE = 10
-    global b
+    buraco.LIXOVELOCIDADE = 10
     b = 0
-    global n
     n = 10
-    Tk().wm_withdraw()
-    messagebox.showinfo('ATENÇÃO', 'DIFICULDADE DEFINIDA COMO FACIL')
+    difficulty = "facil"
 
 def medi():   
+    global b, n, difficulty
     lixos.LIXOVELOCIDADE = 16
     buraco.LIXOVELOCIDADE = 16
-    global b
     b = 1
-    global n
     n = 16
-    Tk().wm_withdraw()
-    messagebox.showinfo('ATENÇÃO', 'DIFICULDADE DEFINIDA COMO MEDIO')
+    difficulty = "medio"
 
 def difi():
+    global b, n, difficulty
     lixos.LIXOVELOCIDADE = 22
     buraco.LIXOVELOCIDADE = 22
-    global b
     b = 2
-    global n
     n = 22
-    Tk().wm_withdraw()
-    messagebox.showinfo('ATENÇÃO', 'DIFICULDADE DEFINIDA COMO DIFICIL')
+    difficulty = "dificil"
 
 def jogo(n, b):
     
     # objetos
     pontos = 0
-    lixo_mochila = 50
+    lixo_mochila = 0
+    capacidade = 8
     timer = 0
     buraco_time = 0
     contagem = 60
     collide = 0
-    t = 2
     fps = 30
-    j = 0
-    x = 8
     bu = b
+    charge_start = None
+    combo = 0
+    last_hit = 0
+    feedback = "Colete lixo e segure ESPACO para arremessar"
+    feedback_until = pygame.time.get_ticks() + 3500
+    dash_until = 0
+    dash_ready = 0
+    end_time = pygame.time.get_ticks() + 60000
 
     objectGroup = pygame.sprite.Group()
 
@@ -610,9 +634,9 @@ def jogo(n, b):
 
     menu_music.stop()
     if bu == 0 or bu == 1:
-        jogo_music.play()
+        jogo_music.play(-1)
     else:
-        hard_music.play()
+        hard_music.play(-1)
 
     val = n
     clock = pygame.time.Clock()
@@ -630,40 +654,52 @@ def jogo(n, b):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                raise SystemExit
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    menu()
-                if t > 15:
-                    if event.key == pygame.K_SPACE:
-                        t = 0
-                        atirar = tiro(objectGroup, tiro_group)
+                    tela = False
+                elif event.key == pygame.K_SPACE and lixo_mochila > 0 and charge_start is None:
+                    charge_start = pygame.time.get_ticks()
+                elif event.key in (pygame.K_LSHIFT, pygame.K_RSHIFT):
+                    now = pygame.time.get_ticks()
+                    if now >= dash_ready:
+                        dash_until = now + 280
+                        dash_ready = now + 2200
+            elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE and charge_start is not None:
+                charge = min(1.0, (pygame.time.get_ticks() - charge_start) / 1000)
+                atirar = tiro(objectGroup, tiro_group,
+                              speed=18 + round(charge * 18), charge=charge)
+                atirar.rect.center = player.rect.center
+                lixo_mochila -= 1
+                charge_start = None
+                player.current_image = 0
+                jogar_saco.stop()
+                jogar_saco.play()
 
-                        if lixo_mochila >= 1:
-                            atirar.rect.center = player.rect.center
-                            lixo_mochila -= 1
-                            player.current_image = 0
-                            jogar_saco.stop()
-                            jogar_saco.play()
-
-        t += 1
+        now = pygame.time.get_ticks()
+        contagem = max(0, math.ceil((end_time - now) / 1000))
+        player.move_speed = 24 if now < dash_until else 13
+        if combo and now - last_hit > 2500:
+            combo = 0
         timer += 1
         buraco_time += 1
         collide += 1
 
-        if buraco_time == 60:
+        if buraco_time >= {0: 90, 1: 65, 2: 48}[bu]:
             buraco_time = 0
             if bu == 1:
                 buraco = buracos(objectGroup, buraco_group)
             if bu == 2:
                 for y in range(0, 2):
                     buraco = buracos(objectGroup, buraco_group)
-        if timer == fps:
-            #time.sleep(0.1)
+        if timer >= {0: 30, 1: 24, 2: 18}[bu]:
             timer = 0
-            lixol = LixoL(objectGroup, Lixo_group)
-            lixor = LixoR(objectGroup, Lixo_group)
-            contagem -= 1
-        
+            novo_lixo = LixoL(objectGroup, Lixo_group) if randint(0, 1) else LixoR(objectGroup, Lixo_group)
+            novo_lixo.rect.x = randint(150, 810)
+            if bu == 2 and randint(0, 2) == 0:
+                extra = LixoL(objectGroup, Lixo_group)
+                extra.rect.x = randint(150, 810)
+
         if contagem == 0:
             game_over()
             tela = False
@@ -671,20 +707,40 @@ def jogo(n, b):
         # Update
         objectGroup.update()
 
-        #colisão
-        if pygame.sprite.groupcollide(Lixo_group, Player_group, True, False):
+        # Coleta exige gerenciamento de capacidade: lixo excedente continua na pista.
+        coletados = pygame.sprite.spritecollide(player, Lixo_group, False)
+        if coletados and lixo_mochila < capacidade:
+            coletados[0].kill()
             lixo_mochila += 1
+            feedback = f"Mochila {lixo_mochila}/{capacidade}"
+            feedback_until = now + 700
 
-        if pygame.sprite.groupcollide(tiro_group, Carro_group, True, False):
-            pontos += 2
+        # Pontuacao combina sequencia, precisao horizontal e carga ideal.
+        acertos = pygame.sprite.spritecollide(carro, tiro_group, True)
+        for acerto in acertos:
+            combo = min(combo + 1, 9)
+            last_hit = now
+            distancia = abs(acerto.rect.centerx - carro.rect.centerx)
+            bonus_precisao = 2 if distancia < 24 else 0
+            bonus_carga = 2 if 0.55 <= acerto.charge <= 0.80 else 0
+            ganho = 2 + combo + bonus_precisao + bonus_carga
+            pontos += ganho
+            if bonus_precisao and bonus_carga:
+                feedback = f"PERFEITO! +{ganho}"
+            elif bonus_precisao:
+                feedback = f"PRECISAO! +{ganho}"
+            else:
+                feedback = f"ACERTO +{ganho}"
+            feedback_until = now + 900
         
         if collide > 3:
-            if pygame.sprite.groupcollide(Player_group, buraco_group, False, False):
+            if pygame.sprite.spritecollide(player, buraco_group, True):
                 collide = 0
                 if lixo_mochila > 0:
-                    lixo_mochila -= 5
-                if lixo_mochila < 0:
-                    lixo_mochila = 0
+                    lixo_mochila = max(0, lixo_mochila - 2)
+                combo = 0
+                feedback = "TROPECOU! Combo perdido"
+                feedback_until = now + 1200
 
         objectGroup.draw(screen)
 
@@ -702,10 +758,33 @@ def jogo(n, b):
         screen.blit(time, (655, 20))
 
         text(screen, f"{pontos}", 50, 280, 15, (238, 175, 81, 0))
-        text(screen, f"{lixo_mochila}", 30, 260, 80, (238, 175, 81, 0))
+        text(screen, f"{lixo_mochila}/{capacidade}", 30, 270, 80, (238, 175, 81, 0))
         text(screen, f"{contagem}", 30, 799, 22, (238, 175, 81, 0))
 
-        pygame.display.update()
+        if combo > 1:
+            text(screen, f"COMBO x{combo}", 25, 490, 24, (255, 213, 116))
+
+        # Barra de carga: a faixa verde e o ponto ideal de forca.
+        if charge_start is not None:
+            charge = min(1.0, (now - charge_start) / 1000)
+            bar = pygame.Rect(365, 665, 250, 18)
+            pygame.draw.rect(screen, (24, 42, 44), bar, border_radius=8)
+            ideal = pygame.Rect(bar.x + round(bar.width * .55), bar.y,
+                                round(bar.width * .25), bar.height)
+            pygame.draw.rect(screen, (65, 122, 78), ideal, border_radius=8)
+            fill = bar.copy()
+            fill.width = round(bar.width * charge)
+            pygame.draw.rect(screen, (238, 175, 81), fill, border_radius=8)
+            pygame.draw.rect(screen, (242, 246, 238), bar, 2, border_radius=8)
+            text(screen, "FORCA", 16, 490, 640, (242, 246, 238))
+
+        dash_left = max(0, dash_ready - now)
+        dash_status = "SHIFT: DASH" if dash_left == 0 else f"DASH {dash_left / 1000:.1f}s"
+        text(screen, dash_status, 16, 865, 675, (242, 246, 238))
+        if now < feedback_until:
+            text(screen, feedback, 19, 490, 105, (255, 224, 156))
+
+        present()
 
 menu()
 pygame.quit()

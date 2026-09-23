@@ -25,14 +25,15 @@ class Player(pygame.sprite.Sprite):
         self.image = self.images[self.current_image]
     
         
+        speed = getattr(self, "move_speed", 13)
         if comandos[pygame.K_w] or comandos[pygame.K_UP]:
-            self.rect.y -= 13
+            self.rect.y -= speed
         if comandos[pygame.K_s] or comandos[pygame.K_DOWN]:
-            self.rect.y += 13
+            self.rect.y += speed
         if comandos[pygame.K_d] or comandos[pygame.K_RIGHT]:
-            self.rect.x += 13
+            self.rect.x += speed
         if comandos[pygame.K_a] or comandos[pygame.K_LEFT]:
-            self.rect.x -= 13
+            self.rect.x -= speed
 
         # Limitando area do personagem andar
         if self.rect.top < 200:
